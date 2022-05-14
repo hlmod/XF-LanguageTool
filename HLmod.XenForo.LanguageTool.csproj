@@ -5,6 +5,11 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Authors>CrazyHackGUT</Authors>
+    <Company>HLmod Community</Company>
+    <Product>XFLanguageTool</Product>
+    <RepositoryUrl>https://github.com/hlmod/XF-LanguageTool</RepositoryUrl>
+    <AssemblyName>XFLanguageTool</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

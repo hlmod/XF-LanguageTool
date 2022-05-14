@@ -90,7 +90,7 @@ internal class PoProvider : BaseProvider
             SkipInfoHeaders = false
         });
 
-        using (var file = File.OpenWrite(path))
+        using (var file = File.Open(path, FileMode.OpenOrCreate, FileAccess.Write))
         {
             generator.Generate(file, catalog);
             await file.FlushAsync();

@@ -1,0 +1,79 @@
+name: Publish release binaries
+
+on:
+  push:
+    tags: 
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform:
+          # Microsoft Windows
+          - win8-x64
+          - win8-arm
+          - win8-arm64
+          # Linux
+          - linux-x64
+          - linux-musl-x64
+          - linux-arm
+          - linux-arm64
+          # Apple macOS
+          - osx-x64
+          - osx-arm64
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: 6.0.x
+
+    - name: Publish
+      run: |
+        dotnet publish --configuration Release --output ./package \
+            -p:PublishReadyToRun=true -p:PublishSingleFile=true -p:PublishTrimmed=true \
+            --self-contained --runtime=${{ matrix.platform }} \
+            "./HLmod.XenForo.LanguageTool.sln"
+
+    - name: Create release archive
+      run: |
+        echo "RELEASE_FILENAME=release-${{ matrix.platform }}-${GITHUB_REF/refs\/tags\//}-${GITHUB_SHA::7}.zip" >> $GITHUB_ENV
+        zip -rX release.zip ./package/*
+
+    - name: Create checksum
+      run: sha256sum release.zip > checksum.txt
+
+    - name: Create release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: ${{ github.ref }}
+        draft: true
+        prerelease: ${{ contains(github.ref, 'beta') || contains(github.ref, 'alpha') }}
+
+    - name: Upload binary
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: release.zip
+        asset_name: ${{ env.RELEASE_FILENAME }}
+        asset_content_type: application/zip
+
+    - name: Upload checksum
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: checksum.txt
+        asset_name: checksum-${{ matrix.platform }}.txt
+        asset_content_type: text/plain

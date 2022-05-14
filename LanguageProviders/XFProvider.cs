@@ -25,7 +25,7 @@ internal class XFProvider : BaseProvider
 
     public override Task SaveAsync(string path, Language language)
     {
-        using (var file = File.OpenWrite(path))
+        using (var file = File.Open(path, FileMode.OpenOrCreate, FileAccess.Write))
         {
             LanguageSerializer.SerializeWithoutNamespaces(file, language);
         }
