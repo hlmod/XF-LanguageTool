@@ -9,4 +9,22 @@ using HLmod.XenForo.LanguageTool;
 using HLmod.XenForo.LanguageTool.Extensions;
 
 var parameters = Parser.Default.ParseArguments<CommandLineOptions>(args).CastToValue();
-await new Converter(parameters).RunAsync();
+foreach (var path in new[] {parameters.Source, parameters.Target})
+{
+    if (string.IsNullOrWhiteSpace(path))
+    {
+        return -1;
+    }
+}
+
+var returnCode = 0;
+try
+{
+    await new Converter(parameters).RunAsync();
+}
+catch
+{
+    returnCode = -1;
+}
+
+return returnCode;

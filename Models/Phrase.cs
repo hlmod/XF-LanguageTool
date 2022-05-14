@@ -3,6 +3,7 @@
 //
 // Developed for HLmod Community.
 
+using System.Xml;
 using System.Xml.Serialization;
 
 namespace HLmod.XenForo.LanguageTool.Models;
@@ -41,6 +42,26 @@ public class Phrase
     /// <summary>
     /// Phrase text. 
     /// </summary>
-    [XmlText]
+    [XmlIgnore]
     public string Content { get; set; } = "";
+
+    /// <summary>
+    /// Element only for serializer: used for converting CDATA to phrase content and vice versa.
+    /// </summary>
+    [XmlText]
+    public XmlNode[] ContentCData
+    {
+        get => new XmlNode[] { new XmlDocument().CreateCDataSection(Content) };
+
+        set
+        {
+            if (value == null || value.Length < 1)
+            {
+                Content = "";
+                return;
+            }
+
+            Content = value[0].Value ?? "";
+        }
+    }
 }

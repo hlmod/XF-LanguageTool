@@ -19,7 +19,7 @@ internal class XFProvider : BaseProvider
         using (var file = File.OpenRead(path))
         {
             var language = (Language?) LanguageSerializer.Deserialize(file);
-            return new Task<Language?>(() => language);
+            return new Task<Language?>(() => language).AsStarted();
         }
     }
 
@@ -30,6 +30,6 @@ internal class XFProvider : BaseProvider
             LanguageSerializer.SerializeWithoutNamespaces(file, language);
         }
 
-        return new Task(() => {});
+        return new Task(() => {}).AsStarted();
     }
 }

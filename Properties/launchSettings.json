@@ -1,0 +1,24 @@
+{
+  "profiles": {
+    "WSL": {
+      "commandName": "WSL2",
+      "environmentVariables": {},
+      "distributionName": ""
+    },
+    "Convert .po to .xml": {
+      "commandName": "Project",
+      "commandLineArgs": ".\\language.po .\\language-compiled.xml",
+      "workingDirectory": "$(MSBuildProjectDirectory)"
+    },
+    "Convert .xml to .po": {
+      "commandName": "Project",
+      "commandLineArgs": ".\\language-source.xml .\\language.po",
+      "workingDirectory": "$(MSBuildProjectDirectory)"
+    },
+    "Convert exported .xml to .po": {
+      "commandName": "Project",
+      "commandLineArgs": ".\\language-compiled.xml .\\language.po",
+      "workingDirectory": "$(MSBuildProjectDirectory)"
+    }
+  }
+}

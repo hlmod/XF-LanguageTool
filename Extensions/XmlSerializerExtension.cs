@@ -7,7 +7,7 @@ using System.Xml.Serialization;
 
 namespace HLmod.XenForo.LanguageTool.Extensions;
 
-public static class XmlSerializerExtension
+internal static class XmlSerializerExtension
 {
     private static XmlSerializerNamespaces namespaces
     {

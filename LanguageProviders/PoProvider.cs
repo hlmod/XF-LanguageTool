@@ -3,6 +3,7 @@
 //
 // Developed for HLmod Community.
 
+using HLmod.XenForo.LanguageTool.Extensions;
 using HLmod.XenForo.LanguageTool.Models;
 using Karambolo.PO;
 
@@ -28,7 +29,7 @@ internal class PoProvider : BaseProvider
         using (var file = File.OpenRead(path))
         {
             var result = parser.Parse(file);
-            if (result.Success)
+            if (result.Catalog != null)
                 return await FromPoResult(result.Catalog);
         }
 
@@ -47,6 +48,7 @@ internal class PoProvider : BaseProvider
         catalog.PluralFormCount = 1;
 
         // Save language metadata.
+        // TODO: move to HeaderComments. Weblate, for example, strips all of these content when imports file.
         catalog.Headers["XF-Title"] = language.Title;
         catalog.Headers["XF-DateFormat"] = language.DateFormat;
         catalog.Headers["XF-TimeFormat"] = language.TimeFormat;
@@ -102,33 +104,37 @@ internal class PoProvider : BaseProvider
 
         // Parameters order here should match with XML parameters in export.
         var headers = catalog.Headers;
-        language.Title = headers["XF-Title"] ?? language.Title;
+        language.Title = headers.GetOrDefault("XF-Title", language.Title);
+        if (string.IsNullOrWhiteSpace(language.Title))
+        {
+            language.Title = "Unknown language"; // This field is required for importing.
+        }
 
         // Formats (date, time, currencies)
-        language.DateFormat = headers["XF-DateFormat"] ?? language.DateFormat;
-        language.TimeFormat = headers["XF-TimeFormat"] ?? language.TimeFormat;
-        language.CurrencyFormat = headers["XF-CurrencyFormat"] ?? language.CurrencyFormat;
+        language.DateFormat = headers.GetOrDefault("XF-DateFormat", language.DateFormat);
+        language.TimeFormat = headers.GetOrDefault("XF-TimeFormat", language.TimeFormat);
+        language.CurrencyFormat = headers.GetOrDefault("XF-CurrencyFormat", language.CurrencyFormat);
 
         // Week start
-        language.WeekStart = int.Parse(headers["XF-WeekStart"] ?? language.WeekStart.ToString());
+        language.WeekStart = int.Parse(headers.GetOrDefault("XF-WeekStart", language.WeekStart.ToString()));
 
         // Points, separators
-        language.DecimalPoint = headers["XF-DecimalPoint"] ?? language.DecimalPoint;
-        language.ThousandsSeparator = headers["XF-ThousandsSeparator"] ?? language.ThousandsSeparator;
-        language.LabelSeparator = headers["XF-LabelSeparator"] ?? language.LabelSeparator;
-        language.CommaSeparator = headers["XF-CommaSeparator"] ?? language.CommaSeparator;
-        language.Ellipsis = headers["XF-Ellipsis"] ?? language.Ellipsis;
+        language.DecimalPoint = headers.GetOrDefault("XF-DecimalPoint", language.DecimalPoint);
+        language.ThousandsSeparator = headers.GetOrDefault("XF-ThousandsSeparator", language.ThousandsSeparator);
+        language.LabelSeparator = headers.GetOrDefault("XF-LabelSeparator", language.LabelSeparator);
+        language.CommaSeparator = headers.GetOrDefault("XF-CommaSeparator", language.CommaSeparator);
+        language.Ellipsis = headers.GetOrDefault("XF-Ellipsis", language.Ellipsis);
 
         // Parenthesis.
-        language.ParenthesisOpen = headers["XF-ParenthesisOpen"] ?? language.ParenthesisOpen;
-        language.ParenthesisClose = headers["XF-ParenthesisClose"] ?? language.ParenthesisClose;
+        language.ParenthesisOpen = headers.GetOrDefault("XF-ParenthesisOpen", language.ParenthesisOpen);
+        language.ParenthesisClose = headers.GetOrDefault("XF-ParenthesisClose", language.ParenthesisClose);
 
         // Basics (language code, etc).
         language.LanguageCode = catalog.Language ?? language.LanguageCode;
-        language.TextDirection = headers["XF-TextDirection"] ?? language.TextDirection;
-        language.UserSelectable = uint.Parse(headers["XF-UserSelectable"] ?? language.UserSelectable.ToString());
-        language.BaseVersionId = uint.Parse(headers["XF-BaseVersionId"] ?? language.BaseVersionId.ToString());
-        language.ExportVersion = uint.Parse(headers["XF-ExportVersion"] ?? language.ExportVersion.ToString());
+        language.TextDirection = headers.GetOrDefault("XF-TextDirection", language.TextDirection);
+        language.UserSelectable = uint.Parse(headers.GetOrDefault("XF-UserSelectable", language.UserSelectable.ToString()));
+        language.BaseVersionId = uint.Parse(headers.GetOrDefault("XF-BaseVersionId", language.BaseVersionId.ToString()));
+        language.ExportVersion = uint.Parse(headers.GetOrDefault("XF-ExportVersion", language.ExportVersion.ToString()));
 
         // Now setup phrases.
         foreach (POSingularEntry poPhrase in catalog)
@@ -162,7 +168,7 @@ internal class PoProvider : BaseProvider
             language.Phrases.Add(phrase);
         }
 
-        return new Task<Language?>(() => language);
+        return new Task<Language?>(() => language).AsStarted();
     }
     private POReferenceComment BuildComment(Phrase phrase)
     {
